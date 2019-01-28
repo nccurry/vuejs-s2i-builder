@@ -42,9 +42,9 @@ if [ ! -z "$NPM_MIRROR" ]; then
 fi
 
 echo "---> Installing dependencies"
-npm install
+npm install --verbose
 echo "---> Building application"
-npm run build
+npm run build --verbose
 
 # This will cause the image to fail if you attempt to run it directly
 # Set DEV_MODE=true if you want to test using this image
