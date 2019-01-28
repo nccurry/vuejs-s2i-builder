@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -e
+
+echo "Running this image is only recommended during development or for testing purposes"
+echo "It is recommended to use this image as a pure builder image and leverage chained s2i builds. https://docs.okd.io/latest/dev_guide/builds/advanced_build_operations.html#dev-guide-chaining-builds"
+
+if [ ! -z "$NPM_RUN" ]; then
+  $NPM_RUN
+else
+  npm serve
+fi
+
+# # Allow debugging the builder image itself, by using:
+# # $ docker run -it nodeshift/centos7-s2i-web-app --debug
+[ "$1" == "--debug" ] && exec /bin/bash

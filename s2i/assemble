@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $STI_SCRIPT_PATH/env
+
+# Restore artifacts from previous build (if they exist)
+if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
+  echo "---> Restoring build artifacts..."
+  mv /tmp/artifacts/node_modules ./
+fi
+
+# Copy source code to user directory
+echo "---> Installing application source"
+cp -Rfp /tmp/src/. ./
+
+# Tweak proxy settings if necessary
+if [ ! -z $HTTP_PROXY ]; then
+	echo "---> Setting npm http proxy to $HTTP_PROXY"
+	npm config set proxy $HTTP_PROXY
+fi
+
+if [ ! -z $http_proxy ]; then
+	echo "---> Setting npm http proxy to $http_proxy"
+	npm config set proxy $http_proxy
+fi
+
+if [ ! -z $HTTPS_PROXY ]; then
+	echo "---> Setting npm https proxy to $HTTPS_PROXY"
+	npm config set https-proxy $HTTPS_PROXY
+fi
+
+if [ ! -z $https_proxy ]; then
+	echo "---> Setting npm https proxy to $https_proxy"
+	npm config set https-proxy $https_proxy
+fi
+
+# Change the npm registry mirror if provided
+if [ ! -z "$NPM_MIRROR" ]; then
+	echo "---> Setting the npm package mirror to $NPM_MIRROR"
+	npm config set registry $NPM_MIRROR
+fi
+
+echo "---> Building your Node application from source"
+echo -e "Current git config"
+git config --list
+
+if [ ! -z "$YARN_ENABLED" ]; then
+	echo "---> Using 'yarn install' with YARN_ARGS"
+	yarn install $YARN_ARGS
+else
+	echo "---> Installing dependencies"
+	if [ "$DEV_MODE" == true ]; then
+		echo "---> Using 'npm install'"
+		npm install
+		# Do not fail when there is no build script
+		echo "---> Building in development mode"
+		npm run build --if-present
+	else
+		HAS_BUILD=$(node -e "console.log(require('./package.json').scripts.build ? true : false)")
+		# Check to see if there is a build script by inspecting the package.json
+		if [ "$HAS_BUILD" == true ]; then
+			# Do a npm install to get the dev depdencies
+			echo "---> Installing dev dependencies"
+			NODE_ENV=development npm install
+			# Do not fail when there is no build script
+			echo "---> Building in production mode"
+			npm run build --if-present
+		else
+			echo "---> Using 'npm install -s --only=production'"
+			npm install -s --only=production
+		fi
+		echo "---> Pruning the development dependencies"
+		npm prune
+	fi
+fi
+
+echo "---> Cleaning up npm cache"
+rm -rf .npm
+
+# Not entirely sure this is required (stolen from fix-permissions script)
+# Fix permissions on the given directory or file to allow group read/write of
+# regular files and execute of directories.
+echo "---> Fix permissions on app-root"
+SYMLINK_OPT=${2:--L}
+[ $(id -u) -ne 0 ] && CHECK_OWNER=" -uid $(id -u)"
+find $SYMLINK_OPT "/opt/app-root" ${CHECK_OWNER} \! -gid 0 -exec chgrp 0 {} +
+find $SYMLINK_OPT "/opt/app-root" ${CHECK_OWNER} \! -perm -g+rw -exec chmod g+rw {} +
+find $SYMLINK_OPT "/opt/app-root" ${CHECK_OWNER} -perm /u+x -a \! -perm /g+x -exec chmod g+x {} +
+find $SYMLINK_OPT "/opt/app-root" ${CHECK_OWNER} -type d \! -perm /g+x -exec chmod g+x {} +
+exit 0
