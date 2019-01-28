@@ -8,7 +8,7 @@ Running this image is only recommended during development or for testing purpose
 To run this directly, you must specify the DEV_MODE=true environment variable
 https://docs.okd.io/latest/dev_guide/builds/advanced_build_operations.html#dev-guide-chaining-builds
 
-If you wish to use this image directly anyways, you can use something like the following s2i CLI command:
+If you wish to use this image directly anyways, you can use the following s2i CLI command:
 s2i build -e DEV_MODE=true --copy . nccurry/vuejs-s2i-builder:latest sample-app
 
 You can then run the resulting image via:
