@@ -41,21 +41,24 @@ if [ ! -z "$NPM_MIRROR" ]; then
 	npm config set registry $NPM_MIRROR
 fi
 
-echo "---> Installing dependencies"
-NODE_ENV=development npm install --verbose
+echo "---> Installing all dependencies"
+NODE_ENV=development npm install
 echo "---> Building application"
-npm run build --verbose
+npm run build
 
 # This will cause the image to fail if you attempt to run it directly
 # Set DEV_MODE=true if you want to test using this image
 # Otherwise use a chained s2i build
 if [ ! "$DEV_MODE" ]; then
   echo "---> Pruning the development dependencies"
-  npm prune --verbose
+  npm prune
 fi
 
 echo "---> Cleaning up npm cache"
 rm -rf .npm
+
+echo "---> Copy nginx configuration into dist"
+mv nginx-cfg dist/
 
 echo "---> Fix permissions on app-root"
 chown -R 1001:0 $APP_ROOT
