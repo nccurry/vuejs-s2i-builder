@@ -2,7 +2,7 @@
 
 set -e
 
-source $STI_SCRIPT_PATH/env
+source /usr/libexec/s2i/env
 
 # Restore artifacts from previous build (if they exist)
 if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
@@ -41,51 +41,21 @@ if [ ! -z "$NPM_MIRROR" ]; then
 	npm config set registry $NPM_MIRROR
 fi
 
-echo "---> Building your Node application from source"
-echo -e "Current git config"
-git config --list
+echo "---> Installing dependencies"
+npm install
+echo "---> Building application"
+npm run build
 
-if [ ! -z "$YARN_ENABLED" ]; then
-	echo "---> Using 'yarn install' with YARN_ARGS"
-	yarn install $YARN_ARGS
-else
-	echo "---> Installing dependencies"
-	if [ "$DEV_MODE" == true ]; then
-		echo "---> Using 'npm install'"
-		npm install
-		# Do not fail when there is no build script
-		echo "---> Building in development mode"
-		npm run build --if-present
-	else
-		HAS_BUILD=$(node -e "console.log(require('./package.json').scripts.build ? true : false)")
-		# Check to see if there is a build script by inspecting the package.json
-		if [ "$HAS_BUILD" == true ]; then
-			# Do a npm install to get the dev depdencies
-			echo "---> Installing dev dependencies"
-			NODE_ENV=development npm install
-			# Do not fail when there is no build script
-			echo "---> Building in production mode"
-			npm run build --if-present
-		else
-			echo "---> Using 'npm install -s --only=production'"
-			npm install -s --only=production
-		fi
-		echo "---> Pruning the development dependencies"
-		npm prune
-	fi
+# This will cause the image to fail if you attempt to run it directly
+# Set DEV_MODE=true if you want to test using this image
+# Otherwise use a chained s2i build
+if [ ! "$DEV_MODE" ]; then
+  echo "---> Pruning the development dependencies"
+  npm prune
 fi
 
 echo "---> Cleaning up npm cache"
 rm -rf .npm
 
-# Not entirely sure this is required (stolen from fix-permissions script)
-# Fix permissions on the given directory or file to allow group read/write of
-# regular files and execute of directories.
 echo "---> Fix permissions on app-root"
-SYMLINK_OPT=${2:--L}
-[ $(id -u) -ne 0 ] && CHECK_OWNER=" -uid $(id -u)"
-find $SYMLINK_OPT "/opt/app-root" ${CHECK_OWNER} \! -gid 0 -exec chgrp 0 {} +
-find $SYMLINK_OPT "/opt/app-root" ${CHECK_OWNER} \! -perm -g+rw -exec chmod g+rw {} +
-find $SYMLINK_OPT "/opt/app-root" ${CHECK_OWNER} -perm /u+x -a \! -perm /g+x -exec chmod g+x {} +
-find $SYMLINK_OPT "/opt/app-root" ${CHECK_OWNER} -type d \! -perm /g+x -exec chmod g+x {} +
-exit 0
+chown -R 1001:0 $APP_ROOT

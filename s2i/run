@@ -2,15 +2,13 @@
 
 set -e
 
-echo "Running this image is only recommended during development or for testing purposes"
-echo "It is recommended to use this image as a pure builder image and leverage chained s2i builds. https://docs.okd.io/latest/dev_guide/builds/advanced_build_operations.html#dev-guide-chaining-builds"
+echo "It is expected that this image is to be used in a chained s2i build."
+echo "Running this image is only recommended during development or for testing purposes."
+echo "To run this directly, you must specify the DEV_MODE=true environment variable."
+echo "https://docs.okd.io/latest/dev_guide/builds/advanced_build_operations.html#dev-guide-chaining-builds"
 
-if [ ! -z "$NPM_RUN" ]; then
-  $NPM_RUN
-else
-  npm serve
-fi
+npm run serve
 
 # # Allow debugging the builder image itself, by using:
-# # $ docker run -it nodeshift/centos7-s2i-web-app --debug
+# # $ docker run -it nccurry/vuejs-s2i-builder --debug
 [ "$1" == "--debug" ] && exec /bin/bash

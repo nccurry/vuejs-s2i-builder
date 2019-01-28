@@ -1,4 +1,6 @@
-FROM node:current-alpine
+FROM alpine:latest
+
+EXPOSE 8080
 
 ENV SUMMARY="" \
     DESCRIPTION=""
@@ -20,23 +22,19 @@ LABEL io.k8s.description="$DESCRIPTION" \
 
 ENV STI_SCRIPTS_PATH=/usr/libexec/s2i \
     APP_ROOT=/opt/app-root \
-    HOME=/opt/app-root/src \
-    PATH=/opt/app-root/src/bin:/opt/app-root/bin:$PATH
+    HOME=/opt/app-root/src
+ENV PATH=$HOME/bin:$APP_ROOT/bin:$PATH
 
 COPY ./s2i/ $STI_SCRIPTS_PATH
+#COPY ./bin/* /usr/bin/
 
-# Install bash TODO: Remove this dependency and use sh
-# Create default user, home directory, and modify permissions.
-# Install vue cli
-RUN apk add bash && \
-    mkdir -p {HOME} && \
-    chown -R 1001:0 ${APP_ROOT} && \
-    useradd -u 1001 -r -g 0 -d ${HOME} -s /sbin/nologin -c "Default Application User" default && \
-    npm install -g @vue/cli
+#RUN apk add bash git python2 make g++ npm && \
+RUN apk add bash git npm && \
+    mkdir -p ${HOME} && \
+    adduser -S -u 1001 -G root -h ${HOME} -s /sbin/nologin -g "Default Application User" default && \
+    chown -R 1001:0 ${APP_ROOT}
 
 USER 1001
-
-EXPOSE 8080
 
 WORKDIR ${HOME}
 
