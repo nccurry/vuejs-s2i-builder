@@ -42,7 +42,7 @@ if [ ! -z "$NPM_MIRROR" ]; then
 fi
 
 echo "---> Installing dependencies"
-npm install --verbose
+NODE_ENV=development npm install --verbose
 echo "---> Building application"
 npm run build --verbose
 
@@ -51,7 +51,7 @@ npm run build --verbose
 # Otherwise use a chained s2i build
 if [ ! "$DEV_MODE" ]; then
   echo "---> Pruning the development dependencies"
-  npm prune
+  npm prune --verbose
 fi
 
 echo "---> Cleaning up npm cache"
