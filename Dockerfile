@@ -25,7 +25,7 @@ LABEL io.k8s.description="$DESCRIPTION" \
 ENV STI_SCRIPTS_PATH=/usr/libexec/s2i \
     APP_ROOT=/opt/app-root \
     HOME=/opt/app-root/src
-ENV PATH=$HOME/bin:$APP_ROOT/bin:$PATH
+ENV PATH=$HOME/node_modules/.bin:$HOME/bin:$APP_ROOT/bin:$PATH
 
 COPY ./s2i/ $STI_SCRIPTS_PATH
 
