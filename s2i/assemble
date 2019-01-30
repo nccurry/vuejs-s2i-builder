@@ -57,16 +57,9 @@ fi
 echo "---> Cleaning up npm cache"
 rm -rf .npm
 
-echo "---> Copy nginx configuration into output directory"
-# https://github.com/sclorg/nginx-container/tree/master/1.14
 if [ -f "nginx.conf" ]; then
+  echo "---> Copy nginx configuration into output directory"
   mv nginx.conf dist/
-fi
-if [ -d "nginx-cfg" ]; then
-  mv nginx-cfg dist/
-fi
-if [ -d "nginx-start" ]; then
-  mv nginx-start dist/
 fi
 
 echo "---> Fix permissions on app-root"
