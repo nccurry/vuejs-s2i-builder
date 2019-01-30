@@ -71,5 +71,3 @@ fi
 
 echo "---> Fix permissions on app-root"
 chown -R 1001:0 $APP_ROOT
-find $APP_ROOT -type d -exec chmod 555 {} +
-find $APP_ROOT -type f -exec chmod 444 {} +
