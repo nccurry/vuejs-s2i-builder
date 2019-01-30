@@ -4,7 +4,7 @@ A docker image for building chained source-to-image VueJS web applications.
 
 ## Building this image
 ```shell
-docker build -t vuejs-s2i-builder:latest
+docker build -t vuejs-s2i-builder:latest .
 ```
 
 ## Using this image in a development build
